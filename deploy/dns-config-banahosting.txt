@@ -1,0 +1,43 @@
+# CONFIGURACIÓN DNS PARA BanaHosting
+# Panel de Control: cPanel, Plesk o similar
+
+## OPCIÓN 1: Crear subdominio en BanaHosting (RECOMENDADO)
+
+### Pasos en BanaHosting:
+1. Iniciar sesión en el panel de control
+2. Buscar "Zone Editor" o "Editor DNS" o "Subdominios"
+3. Agregar registro tipo A:
+   - Nombre/Host: crm
+   - Tipo: A
+   - Valor/IP: 162.213.253.208
+   - TTL: 3600 (1 hora)
+
+### Verificar configuración:
+Una vez agregado, esperar 15-30 minutos y probar:
+```bash
+nslookup crm.pgkhiszpania.com
+ping crm.pgkhiszpania.com
+```
+
+## OPCIÓN 2: Si no encuentras DNS en BanaHosting
+
+### Buscar estas secciones en el panel:
+- "DNS Management"
+- "Zone Editor" 
+- "Subdominios"
+- "Advanced DNS"
+- "DNS Records"
+
+### En cPanel busca:
+- Zone Editor (en sección "Dominios")
+- Subdomains (en sección "Dominios")
+
+### En Plesk busca:
+- DNS Settings
+- Hosting Settings > DNS
+
+## VERIFICACIÓN FINAL
+Cuando esté configurado, el DNS debería mostrar:
+```
+crm.pgkhiszpania.com → 162.213.253.208
+```

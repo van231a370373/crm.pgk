@@ -1,0 +1,50 @@
+# COMANDOS PARA EJECUTAR EN EL SERVIDOR SSH
+# Copia y pega línea por línea
+
+# 1. Actualizar sistema
+apt update && apt upgrade -y
+
+# 2. Instalar Nginx
+apt install -y nginx
+
+# 3. Crear directorio del proyecto
+mkdir -p /var/www/crm-polska/dist
+
+# 4. Configurar Nginx para el CRM
+cat > /etc/nginx/sites-available/crm-polska << 'EOF'
+server {
+    listen 80;
+    server_name crm.pgkhiszpania.com;
+    root /var/www/crm-polska/dist;
+    index index.html index.htm;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+}
+EOF
+
+# 5. Habilitar el sitio
+ln -sf /etc/nginx/sites-available/crm-polska /etc/nginx/sites-enabled/
+rm -f /etc/nginx/sites-enabled/default
+
+# 6. Verificar configuración
+nginx -t
+
+# 7. Reiniciar Nginx
+systemctl restart nginx
+systemctl enable nginx
+
+# 8. Configurar firewall
+ufw allow 22
+ufw allow 80
+ufw allow 443
+ufw --force enable
+
+echo "✅ Servidor configurado correctamente!"
+echo "Ahora sube los archivos a: /var/www/crm-polska/dist"
