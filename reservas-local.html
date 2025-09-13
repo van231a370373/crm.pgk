@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Reservas - Vista Local</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+        }
+        .calendar-day {
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .calendar-day:hover {
+            background-color: #f3f4f6;
+        }
+        .calendar-day.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .calendar-day.available {
+            background-color: #10b981;
+            color: white;
+        }
+        .calendar-day.unavailable {
+            background-color: #ef4444;
+            color: white;
+            cursor: not-allowed;
+        }
+        .time-slot {
+            padding: 8px 16px;
+            margin: 4px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .time-slot:hover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .time-slot.selected {
+            border-color: #3b82f6;
+            background-color: #3b82f6;
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- VERSIÓN LOCAL - SIMULACIÓN -->
+    <script>
+        // Simulación local - datos en memoria
+        const LOCAL_DATA = {
+            availability: {
+                rules: [
+                    { day: 1, startTime: '09:00', endTime: '18:00', isActive: true }, // Lunes
+                    { day: 2, startTime: '09:00', endTime: '18:00', isActive: true }, // Martes
+                    { day: 3, startTime: '09:00', endTime: '18:00', isActive: true }, // Miércoles
+                    { day: 4, startTime: '09:00', endTime: '18:00', isActive: true }, // Jueves
+                    { day: 5, startTime: '09:00', endTime: '14:00', isActive: true }, // Viernes
+                ],
+                exceptions: [],
+                settings: {
+                    slotDuration: 60,
+                    breakTime: 0,
+                    maxDaysInAdvance: 30,
+                    allowSameDay: false,
+                    minHoursInAdvance: 2,
+                    maxAppointmentsPerDay: 8
+                }
+            },
+            appointments: []
+        };
+
+        // Categorías por defecto (se sincronizan con el CRM)
+        const DEFAULT_CATEGORIES = [
+            { id: '1', name: 'IRNR' },
+            { id: '2', name: 'Alta autónomo' },
+            { id: '3', name: 'Certificado digital' },
+            { id: '4', name: 'Informe específico' }
+        ];
+
+        // Función para obtener categorías del CRM (desde localStorage)
+        function getServiceCategories() {
+            try {
+                const stored = localStorage.getItem('pgk-crm-service-categories');
+                if (stored) {
+                    const categories = JSON.parse(stored);
+                    return categories.length > 0 ? categories : DEFAULT_CATEGORIES;
+                }
+            } catch (error) {
+                console.log('No se pudieron cargar las categorías del CRM, usando por defecto');
+            }
+            return DEFAULT_CATEGORIES;
+        }
+
+        // Funciones de simulación
+        function getAvailableDates() {
+            const dates = [];
+            const today = new Date();
+            
+            for (let i = 1; i <= 30; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() + i);
+                
+                const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay(); // Convertir domingo a 7
+                const rule = LOCAL_DATA.availability.rules.find(r => r.day === dayOfWeek && r.isActive);
+                
+                if (rule) {
+                    dates.push(date.toISOString().split('T')[0]);
+                }
+            }
+            
+            return dates;
+        }
+
+        function getTimeSlots(selectedDate) {
+            const date = new Date(selectedDate);
+            const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay();
+            const rule = LOCAL_DATA.availability.rules.find(r => r.day === dayOfWeek && r.isActive);
+            
+            if (!rule) return [];
+            
+            const slots = [];
+            const [startHour, startMin] = rule.startTime.split(':').map(Number);
+            const [endHour, endMin] = rule.endTime.split(':').map(Number);
+            
+            let current = new Date();
+            current.setHours(startHour, startMin, 0, 0);
+            
+            const end = new Date();
+            end.setHours(endHour, endMin, 0, 0);
+            
+            while (current < end) {
+                const timeString = current.toTimeString().slice(0, 5);
+                slots.push(timeString);
+                current.setMinutes(current.getMinutes() + LOCAL_DATA.availability.settings.slotDuration);
+            }
+            
+            return slots;
+        }
+        
+        function createAppointment(appointmentData) {
+            const newAppointment = {
+                id: Date.now(),
+                ...appointmentData,
+                status: 'pending',
+                createdAt: new Date().toISOString()
+            };
+            
+            LOCAL_DATA.appointments.push(newAppointment);
+            return newAppointment;
+        }
+    </script>
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-6xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-lg">PGK</span>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Reserva tu Cita</h1>
+                        <p class="text-gray-600">Sistema Local de Prueba</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm text-gray-500">Conexión:</div>
+                    <div class="text-green-600 font-semibold">🟢 LOCAL</div>
+                    <button onclick="refreshCategories()" 
+                        class="text-xs text-blue-600 hover:text-blue-800 mt-1 block">
+                        🔄 Sincronizar CRM
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Alert Local -->
+    <div class="max-w-6xl mx-auto px-4 py-4">
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-yellow-800">Modo Local de Prueba</h3>
+                    <div class="mt-2 text-sm text-yellow-700">
+                        <p>Esta es una simulación local. Los datos se guardan temporalmente en tu navegador. Para el sistema real, visita: <strong>www.pgkhiszpanii.com/reservas/</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Formulario -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-6">Información Personal</h2>
+                
+                <form id="appointmentForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nombre Completo *</label>
+                        <input type="text" id="clientName" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                        <input type="email" id="clientEmail" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono *</label>
+                        <input type="tel" id="clientPhone" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Consulta *</label>
+                        <select id="consultationType" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Selecciona una opción</option>
+                            <!-- Las opciones se cargan dinámicamente desde el CRM -->
+                        </select>
+                        <p class="text-xs text-blue-600 mt-1">
+                            📋 Sincronizado con las categorías de tu CRM
+                        </p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Comentarios adicionales</label>
+                        <textarea id="comments" rows="3"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Describe brevemente tu consulta..."></textarea>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Calendario y Horarios -->
+            <div class="space-y-6">
+                <!-- Selección de Fecha -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Selecciona una Fecha</h3>
+                    <div id="calendarContainer">
+                        <div class="calendar-grid bg-gray-50 p-4 rounded-lg">
+                            <div class="text-center font-semibold text-gray-700 p-2">Lun</div>
+                            <div class="text-center font-semibold text-gray-700 p-2">Mar</div>
+                            <div class="text-center font-semibold text-gray-700 p-2">Mié</div>
+                            <div class="text-center font-semibold text-gray-700 p-2">Jue</div>
+                            <div class="text-center font-semibold text-gray-700 p-2">Vie</div>
+                            <div class="text-center font-semibold text-gray-700 p-2">Sáb</div>
+                            <div class="text-center font-semibold text-gray-700 p-2">Dom</div>
+                            <!-- Los días se generan con JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Selección de Hora -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Selecciona una Hora</h3>
+                    <div id="timeSlotsContainer" class="text-center text-gray-500">
+                        <p>Selecciona primero una fecha</p>
+                    </div>
+                </div>
+
+                <!-- Botón Confirmar -->
+                <button id="confirmButton" disabled
+                    class="w-full py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">
+                    Confirmar Cita
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal de Confirmación -->
+    <div id="confirmationModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">¡Cita Confirmada!</h3>
+                <p class="text-gray-600 mb-6">Tu cita ha sido registrada correctamente. Recibirás una confirmación por email.</p>
+                <button onclick="closeModal()" class="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedDate = null;
+        let selectedTime = null;
+
+        // Generar calendario
+        function generateCalendar() {
+            const availableDates = getAvailableDates();
+            const calendar = document.querySelector('.calendar-grid');
+            const today = new Date();
+            
+            // Limpiar días anteriores (mantener headers)
+            const existingDays = calendar.querySelectorAll('.calendar-day');
+            existingDays.forEach(day => day.remove());
+            
+            // Generar primeros 21 días disponibles para demo
+            for (let i = 0; i < 21; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() + i + 1);
+                
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day bg-white border';
+                dayElement.textContent = date.getDate();
+                
+                const dateString = date.toISOString().split('T')[0];
+                
+                if (availableDates.includes(dateString)) {
+                    dayElement.classList.add('available');
+                    dayElement.onclick = () => selectDate(dateString, dayElement);
+                } else {
+                    dayElement.classList.add('unavailable');
+                }
+                
+                calendar.appendChild(dayElement);
+            }
+        }
+
+        // Seleccionar fecha
+        function selectDate(date, element) {
+            // Remover selección anterior
+            document.querySelectorAll('.calendar-day.selected').forEach(el => {
+                el.classList.remove('selected');
+                el.classList.add('available');
+            });
+            
+            // Seleccionar nueva fecha
+            element.classList.remove('available');
+            element.classList.add('selected');
+            selectedDate = date;
+            
+            showTimeSlots(date);
+        }
+
+        // Mostrar slots de tiempo
+        function showTimeSlots(date) {
+            const container = document.getElementById('timeSlotsContainer');
+            const slots = getTimeSlots(date);
+            
+            if (slots.length === 0) {
+                container.innerHTML = '<p class="text-gray-500">No hay horarios disponibles para esta fecha</p>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            slots.forEach(slot => {
+                const slotElement = document.createElement('div');
+                slotElement.className = 'time-slot bg-white border inline-block';
+                slotElement.textContent = slot;
+                slotElement.onclick = () => selectTime(slot, slotElement);
+                container.appendChild(slotElement);
+            });
+        }
+
+        // Seleccionar hora
+        function selectTime(time, element) {
+            // Remover selección anterior
+            document.querySelectorAll('.time-slot.selected').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // Seleccionar nueva hora
+            element.classList.add('selected');
+            selectedTime = time;
+            
+            // Habilitar botón
+            document.getElementById('confirmButton').disabled = false;
+        }
+
+        // Confirmar cita
+        document.getElementById('confirmButton').onclick = function() {
+            if (!selectedDate || !selectedTime) {
+                alert('Por favor selecciona fecha y hora');
+                return;
+            }
+            
+            const formData = {
+                clientName: document.getElementById('clientName').value,
+                clientEmail: document.getElementById('clientEmail').value,
+                clientPhone: document.getElementById('clientPhone').value,
+                consultationType: document.getElementById('consultationType').value,
+                comments: document.getElementById('comments').value,
+                appointmentDate: selectedDate,
+                appointmentTime: selectedTime
+            };
+            
+            // Validar formulario
+            if (!formData.clientName || !formData.clientEmail || !formData.clientPhone || !formData.consultationType) {
+                alert('Por favor completa todos los campos obligatorios');
+                return;
+            }
+            
+            // Crear cita (simulado)
+            const appointment = createAppointment(formData);
+            
+            // Mostrar modal de confirmación
+            document.getElementById('confirmationModal').classList.remove('hidden');
+            
+            console.log('Cita creada (modo local):', appointment);
+        };
+
+        // Cerrar modal
+        function closeModal() {
+            document.getElementById('confirmationModal').classList.add('hidden');
+            // Resetear formulario
+            document.getElementById('appointmentForm').reset();
+            selectedDate = null;
+            selectedTime = null;
+            document.getElementById('confirmButton').disabled = true;
+            generateCalendar();
+            document.getElementById('timeSlotsContainer').innerHTML = '<p class="text-center text-gray-500">Selecciona primero una fecha</p>';
+        }
+
+        // Cargar categorías de servicios
+        function loadServiceCategories() {
+            const categories = getServiceCategories();
+            const select = document.getElementById('consultationType');
+            
+            // Limpiar opciones existentes (excepto la primera)
+            while (select.children.length > 1) {
+                select.removeChild(select.lastChild);
+            }
+            
+            // Agregar categorías dinámicamente
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.name;
+                option.textContent = category.name;
+                select.appendChild(option);
+            });
+            
+            // Mostrar información de sincronización
+            const info = select.nextElementSibling;
+            if (categories.length > 0 && localStorage.getItem('pgk-crm-service-categories')) {
+                info.textContent = `📋 ${categories.length} categorías sincronizadas desde tu CRM`;
+                info.className = 'text-xs text-green-600 mt-1';
+            } else {
+                info.textContent = '📋 Usando categorías por defecto (configura tu CRM para sincronizar)';
+                info.className = 'text-xs text-amber-600 mt-1';
+            }
+        }
+
+        // Función para refrescar categorías (se puede llamar manualmente)
+        function refreshCategories() {
+            loadServiceCategories();
+            console.log('Categorías actualizadas desde el CRM');
+        }
+
+        // Inicializar
+        loadServiceCategories();
+        generateCalendar();
+    </script>
+</body>
+</html>

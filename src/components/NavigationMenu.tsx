@@ -19,6 +19,7 @@ interface NavigationMenuProps {
   onManageCategories: () => void;
   onOpenTasks: () => void;
   onToggleClientsList: () => void;
+  onOpenCalendar: () => void;
   showClientsList: boolean;
   onSignOut: () => void;
 }
@@ -28,6 +29,7 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({
   onManageCategories,
   onOpenTasks,
   onToggleClientsList,
+  onOpenCalendar,
   showClientsList,
   onSignOut,
 }) => {
@@ -61,6 +63,15 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({
         setIsOpen(false);
       },
       shortcut: 'Ctrl+T'
+    },
+    {
+      label: 'Calendario de Citas',
+      icon: Calendar,
+      action: () => {
+        onOpenCalendar();
+        setIsOpen(false);
+      },
+      shortcut: 'Ctrl+C'
     },
     {
       label: 'Categorías',

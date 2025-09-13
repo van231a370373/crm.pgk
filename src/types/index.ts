@@ -104,3 +104,86 @@ export interface TaskFilter {
   dateRange: string;
   priority: string;
 }
+
+export interface Appointment {
+  id: string;
+  clientId?: string; // Puede ser null si es un nuevo cliente
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string;
+  title: string;
+  description: string;
+  appointmentDate: string;
+  appointmentTime: string;
+  duration: number; // en minutos
+  status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no-show';
+  type: 'consultation' | 'follow-up' | 'document-review' | 'signing' | 'other';
+  location: 'office' | 'video-call' | 'phone' | 'client-location';
+  notes?: string;
+  reminderSent: boolean;
+  confirmationSent: boolean;
+  source: 'web-booking' | 'manual' | 'phone' | 'email';
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string;
+}
+
+export interface AppointmentFilter {
+  status: string;
+  type: string;
+  dateRange: string;
+  source: string;
+}
+
+export interface TimeSlot {
+  time: string;
+  available: boolean;
+  appointmentId?: string;
+}
+
+// Sistema de disponibilidad horaria
+export interface AvailabilityRule {
+  id: string;
+  dayOfWeek: number; // 0=Domingo, 1=Lunes, ..., 6=Sábado
+  startTime: string; // HH:MM formato 24h
+  endTime: string; // HH:MM formato 24h
+  isActive: boolean;
+  slotDuration: number; // Duración de cada slot en minutos (ej: 30, 60)
+  breakTime?: number; // Tiempo de descanso entre citas en minutos
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AvailabilityException {
+  id: string;
+  date: string; // YYYY-MM-DD
+  type: 'unavailable' | 'custom-hours';
+  reason: string;
+  startTime?: string; // Solo si type es 'custom-hours'
+  endTime?: string; // Solo si type es 'custom-hours'
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AvailabilitySettings {
+  id: string;
+  name: string;
+  advanceBookingDays: number; // Cuántos días de anticipación se puede reservar
+  sameDayBooking: boolean; // Permitir reservas el mismo día
+  bufferTime: number; // Tiempo mínimo entre la reserva y la cita (en horas)
+  maxDailyAppointments?: number; // Límite de citas por día
+  autoConfirm: boolean; // Auto-confirmar citas web
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DayAvailability {
+  date: string; // YYYY-MM-DD
+  dayOfWeek: number;
+  isAvailable: boolean;
+  timeSlots: TimeSlot[];
+  rule?: AvailabilityRule;
+  exception?: AvailabilityException;
+}

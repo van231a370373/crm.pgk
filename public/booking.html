@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservar Cita - Polská Grupa Hiszpania</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+        
+        .step-indicator {
+            transition: all 0.3s ease;
+        }
+        
+        .step-complete {
+            background-color: #10B981;
+            color: white;
+        }
+        
+        .step-active {
+            background-color: #3B82F6;
+            color: white;
+        }
+        
+        .step-inactive {
+            background-color: #E5E7EB;
+            color: #6B7280;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .time-slot {
+            transition: all 0.2s ease;
+        }
+        
+        .time-slot:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .time-slot.selected {
+            background-color: #3B82F6;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .hero-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-6xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-lg">PGK</span>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900">Polská Grupa Hiszpania</h1>
+                        <p class="text-sm text-gray-600">Consultoría Legal & Gestión de Trámites</p>
+                    </div>
+                </div>
+                <nav class="hidden md:flex space-x-6">
+                    <a href="#servicios" class="text-gray-600 hover:text-blue-600 transition-colors">Servicios</a>
+                    <a href="#contacto" class="text-gray-600 hover:text-blue-600 transition-colors">Contacto</a>
+                    <a href="#sobre-nosotros" class="text-gray-600 hover:text-blue-600 transition-colors">Sobre Nosotros</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-gradient text-white py-16">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <h2 class="text-4xl md:text-5xl font-bold mb-6">
+                Reserva tu Consulta Gratuita
+            </h2>
+            <p class="text-xl md:text-2xl mb-8 opacity-90">
+                Te ayudamos con todos tus trámites legales en España
+            </p>
+            <div class="flex flex-wrap justify-center gap-6 text-lg">
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="check-circle" class="w-6 h-6"></i>
+                    <span>NIE y Residencia</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="check-circle" class="w-6 h-6"></i>
+                    <span>Reagrupación Familiar</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="check-circle" class="w-6 h-6"></i>
+                    <span>Nacionalidad Española</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="check-circle" class="w-6 h-6"></i>
+                    <span>Gestión Empresarial</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Appointment Booking Section -->
+    <section class="py-16 bg-white">
+        <div class="max-w-4xl mx-auto px-4">
+            <!-- Step Indicator -->
+            <div class="flex justify-center items-center mb-12">
+                <div class="flex items-center space-x-4">
+                    <div id="step-1-indicator" class="step-indicator step-active w-10 h-10 rounded-full flex items-center justify-center font-semibold">
+                        1
+                    </div>
+                    <div class="w-12 h-0.5 bg-gray-300" id="line-1"></div>
+                    <div id="step-2-indicator" class="step-indicator step-inactive w-10 h-10 rounded-full flex items-center justify-center font-semibold">
+                        2
+                    </div>
+                    <div class="w-12 h-0.5 bg-gray-300" id="line-2"></div>
+                    <div id="step-3-indicator" class="step-indicator step-inactive w-10 h-10 rounded-full flex items-center justify-center font-semibold">
+                        3
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booking Form -->
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+                <form id="appointmentForm">
+                    <!-- Step 1: Personal Information -->
+                    <div id="step-1" class="fade-in">
+                        <div class="text-center mb-8">
+                            <h3 class="text-2xl font-bold text-gray-900 mb-2">Información Personal</h3>
+                            <p class="text-gray-600">Cuéntanos sobre ti para personalizar tu consulta</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="fullName" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i data-lucide="user" class="inline w-4 h-4 mr-2"></i>
+                                    Nombre Completo *
+                                </label>
+                                <input
+                                    type="text"
+                                    id="fullName"
+                                    required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                                    placeholder="Tu nombre completo"
+                                >
+                                <div class="text-red-500 text-sm mt-1 hidden" id="fullName-error"></div>
+                            </div>
+
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i data-lucide="mail" class="inline w-4 h-4 mr-2"></i>
+                                    Email *
+                                </label>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                                    placeholder="tu@email.com"
+                                >
+                                <div class="text-red-500 text-sm mt-1 hidden" id="email-error"></div>
+                            </div>
+
+                            <div>
+                                <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i data-lucide="phone" class="inline w-4 h-4 mr-2"></i>
+                                    Teléfono *
+                                </label>
+                                <input
+                                    type="tel"
+                                    id="phone"
+                                    required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                                    placeholder="+34 600 000 000"
+                                >
+                                <div class="text-red-500 text-sm mt-1 hidden" id="phone-error"></div>
+                            </div>
+
+                            <div>
+                                <label for="consultationType" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i data-lucide="file-text" class="inline w-4 h-4 mr-2"></i>
+                                    Tipo de Consulta *
+                                </label>
+                                <select
+                                    id="consultationType"
+                                    required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                                >
+                                    <option value="">Selecciona una opción</option>
+                                    <option value="consultation">Consulta inicial</option>
+                                    <option value="document-review">Revisión de documentos</option>
+                                    <option value="follow-up">Seguimiento de trámite</option>
+                                    <option value="signing">Firma de documentos</option>
+                                    <option value="other">Otra consulta</option>
+                                </select>
+                                <div class="text-red-500 text-sm mt-1 hidden" id="consultationType-error"></div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6">
+                            <label for="subject" class="block text-sm font-medium text-gray-700 mb-2">
+                                <i data-lucide="message-square" class="inline w-4 h-4 mr-2"></i>
+                                Asunto de la Consulta *
+                            </label>
+                            <input
+                                type="text"
+                                id="subject"
+                                required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                                placeholder="Ej: Necesito ayuda con los trámites de NIE"
+                            >
+                            <div class="text-red-500 text-sm mt-1 hidden" id="subject-error"></div>
+                        </div>
+
+                        <div class="mt-6">
+                            <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                                Descripción Adicional (Opcional)
+                            </label>
+                            <textarea
+                                id="description"
+                                rows="3"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                                placeholder="Describe brevemente tu situación para que podamos preparar mejor la consulta..."
+                            ></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Date and Time Selection -->
+                    <div id="step-2" class="hidden fade-in">
+                        <div class="text-center mb-8">
+                            <h3 class="text-2xl font-bold text-gray-900 mb-2">Fecha y Hora</h3>
+                            <p class="text-gray-600">Elige el momento que mejor te convenga</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <label for="appointmentDate" class="block text-sm font-medium text-gray-700 mb-4">
+                                    <i data-lucide="calendar" class="inline w-4 h-4 mr-2"></i>
+                                    Selecciona una Fecha *
+                                </label>
+                                <select
+                                    id="appointmentDate"
+                                    required
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                                >
+                                    <option value="">Elige una fecha</option>
+                                </select>
+                                <div class="text-red-500 text-sm mt-1 hidden" id="appointmentDate-error"></div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-4">
+                                    <i data-lucide="clock" class="inline w-4 h-4 mr-2"></i>
+                                    Modalidad de la Cita
+                                </label>
+                                <select
+                                    id="location"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                                >
+                                    <option value="office">Presencial en oficina</option>
+                                    <option value="video-call">Videollamada</option>
+                                    <option value="phone">Llamada telefónica</option>
+                                    <option value="client-location">A domicilio (consultar)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mt-8" id="timeSlotContainer" style="display: none;">
+                            <label class="block text-sm font-medium text-gray-700 mb-4">
+                                <i data-lucide="clock" class="inline w-4 h-4 mr-2"></i>
+                                Horarios Disponibles *
+                            </label>
+                            <div id="timeSlots" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                                <!-- Time slots will be populated by JavaScript -->
+                            </div>
+                            <div class="text-red-500 text-sm mt-2 hidden" id="appointmentTime-error"></div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Confirmation -->
+                    <div id="step-3" class="hidden fade-in">
+                        <div class="text-center mb-8">
+                            <h3 class="text-2xl font-bold text-gray-900 mb-2">Confirmar Cita</h3>
+                            <p class="text-gray-600">Revisa los datos antes de confirmar tu reserva</p>
+                        </div>
+
+                        <div class="bg-gray-50 rounded-lg p-6 mb-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 mb-3">Información Personal</h4>
+                                    <div class="space-y-2 text-sm text-gray-600">
+                                        <p><strong>Nombre:</strong> <span id="confirm-name"></span></p>
+                                        <p><strong>Email:</strong> <span id="confirm-email"></span></p>
+                                        <p><strong>Teléfono:</strong> <span id="confirm-phone"></span></p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 mb-3">Detalles de la Cita</h4>
+                                    <div class="space-y-2 text-sm text-gray-600">
+                                        <p><strong>Fecha:</strong> <span id="confirm-date"></span></p>
+                                        <p><strong>Hora:</strong> <span id="confirm-time"></span></p>
+                                        <p><strong>Modalidad:</strong> <span id="confirm-location"></span></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-6">
+                                <h4 class="font-semibold text-gray-900 mb-2">Consulta</h4>
+                                <p class="text-sm text-gray-600">
+                                    <strong>Tipo:</strong> <span id="confirm-type"></span>
+                                </p>
+                                <p class="text-sm text-gray-600 mt-1">
+                                    <strong>Asunto:</strong> <span id="confirm-subject"></span>
+                                </p>
+                                <div id="confirm-description-container" class="mt-2 hidden">
+                                    <p class="text-sm text-gray-600">
+                                        <strong>Descripción:</strong> <span id="confirm-description"></span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                            <div class="flex items-start space-x-2">
+                                <i data-lucide="info" class="w-5 h-5 text-blue-600 mt-0.5"></i>
+                                <div class="text-sm text-blue-800">
+                                    <p class="font-semibold mb-1">Información importante:</p>
+                                    <ul class="space-y-1 text-blue-700">
+                                        <li>• Te enviaremos un email de confirmación en los próximos minutos</li>
+                                        <li>• Nos pondremos en contacto contigo para confirmar los detalles</li>
+                                        <li>• La primera consulta es completamente gratuita</li>
+                                        <li>• Si necesitas cancelar, contáctanos con 24h de antelación</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Success Message -->
+                    <div id="success-message" class="hidden fade-in text-center">
+                        <div class="mb-6">
+                            <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i data-lucide="check-circle" class="w-12 h-12 text-green-600"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-900 mb-2">¡Cita Reservada con Éxito!</h3>
+                            <p class="text-gray-600 mb-4">
+                                Hemos recibido tu solicitud de cita. Te contactaremos pronto para confirmar los detalles.
+                            </p>
+                        </div>
+
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+                            <h4 class="font-semibold text-green-800 mb-3">Próximos pasos:</h4>
+                            <div class="text-sm text-green-700 space-y-2">
+                                <div class="flex items-center space-x-2">
+                                    <i data-lucide="check" class="w-4 h-4"></i>
+                                    <span>Recibirás un email de confirmación</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <i data-lucide="phone" class="w-4 h-4"></i>
+                                    <span>Te llamaremos para confirmar la cita</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <i data-lucide="file-text" class="w-4 h-4"></i>
+                                    <span>Prepararemos la documentación necesaria</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            onclick="resetForm()"
+                            class="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                        >
+                            Reservar Otra Cita
+                        </button>
+                    </div>
+
+                    <!-- Form Navigation -->
+                    <div id="form-navigation" class="flex justify-between items-center pt-8 border-t border-gray-200">
+                        <button
+                            type="button"
+                            id="prevBtn"
+                            onclick="previousStep()"
+                            class="px-6 py-3 text-gray-600 hover:text-gray-800 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled
+                        >
+                            ← Anterior
+                        </button>
+
+                        <div class="text-center">
+                            <p class="text-sm text-gray-500">
+                                Paso <span id="current-step">1</span> de 3
+                            </p>
+                        </div>
+
+                        <button
+                            type="button"
+                            id="nextBtn"
+                            onclick="nextStep()"
+                            class="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+                        >
+                            Siguiente →
+                        </button>
+
+                        <button
+                            type="button"
+                            id="confirmBtn"
+                            onclick="submitForm()"
+                            class="hidden px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+                        >
+                            <span id="confirmBtnText">Confirmar Cita</span>
+                            <div id="confirmBtnLoader" class="hidden inline-flex items-center">
+                                <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                                Confirmando...
+                            </div>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Info -->
+    <section class="bg-gray-100 py-12">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="text-center mb-8">
+                <h3 class="text-2xl font-bold text-gray-900 mb-2">¿Necesitas Ayuda?</h3>
+                <p class="text-gray-600">Estamos aquí para responder todas tus preguntas</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="phone" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <h4 class="font-semibold text-gray-900 mb-2">Teléfono</h4>
+                    <p class="text-gray-600">+34 XXX XXX XXX</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="mail" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <h4 class="font-semibold text-gray-900 mb-2">Email</h4>
+                    <p class="text-gray-600">info@polskagrupaespana.com</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="map-pin" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <h4 class="font-semibold text-gray-900 mb-2">Oficina</h4>
+                    <p class="text-gray-600">Madrid, España</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-8">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="text-center">
+                <div class="flex items-center justify-center space-x-4 mb-4">
+                    <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold">PGK</span>
+                    </div>
+                    <h4 class="text-xl font-bold">Polská Grupa Hiszpania</h4>
+                </div>
+                <p class="text-gray-400 mb-4">
+                    Tu socio de confianza para todos los trámites legales en España
+                </p>
+                <p class="text-gray-500 text-sm">
+                    © 2024 Polská Grupa Hiszpania. Todos los derechos reservados.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        let currentStep = 1;
+        let selectedTimeSlot = null;
+        let formData = {};
+
+        // Generate available dates (next 30 days, excluding weekends)
+        function generateAvailableDates() {
+            const dates = [];
+            const today = new Date();
+            
+            for (let i = 1; i <= 30; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() + i);
+                
+                // Skip weekends
+                if (date.getDay() !== 0 && date.getDay() !== 6) {
+                    dates.push({
+                        value: date.toISOString().split('T')[0],
+                        label: date.toLocaleDateString('es-ES', { 
+                            weekday: 'long', 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        })
+                    });
+                }
+            }
+            
+            return dates;
+        }
+
+        // Generate time slots (9:00 to 18:00, every 30 minutes)
+        function generateTimeSlots() {
+            const slots = [];
+            for (let hour = 9; hour < 18; hour++) {
+                for (let minute = 0; minute < 60; minute += 30) {
+                    const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                    // Randomly mark some as unavailable for demo
+                    const available = Math.random() > 0.3;
+                    slots.push({ time, available });
+                }
+            }
+            return slots;
+        }
+
+        // Populate date dropdown
+        function populateDates() {
+            const dateSelect = document.getElementById('appointmentDate');
+            const dates = generateAvailableDates();
+            
+            dates.forEach(date => {
+                const option = document.createElement('option');
+                option.value = date.value;
+                option.textContent = date.label;
+                dateSelect.appendChild(option);
+            });
+        }
+
+        // Show time slots when date is selected
+        function showTimeSlots(selectedDate) {
+            const container = document.getElementById('timeSlotContainer');
+            const slotsGrid = document.getElementById('timeSlots');
+            
+            if (!selectedDate) {
+                container.style.display = 'none';
+                return;
+            }
+            
+            const timeSlots = generateTimeSlots();
+            slotsGrid.innerHTML = '';
+            
+            timeSlots.forEach(slot => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.textContent = slot.time;
+                button.className = `time-slot px-4 py-3 text-sm border rounded-lg transition-all ${
+                    slot.available 
+                        ? 'border-gray-300 hover:border-blue-500 hover:bg-blue-50 cursor-pointer' 
+                        : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+                }`;
+                
+                if (slot.available) {
+                    button.onclick = () => selectTimeSlot(button, slot.time);
+                } else {
+                    button.disabled = true;
+                }
+                
+                slotsGrid.appendChild(button);
+            });
+            
+            container.style.display = 'block';
+        }
+
+        // Select time slot
+        function selectTimeSlot(button, time) {
+            // Remove previous selection
+            document.querySelectorAll('.time-slot.selected').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            // Add selection to clicked button
+            button.classList.add('selected');
+            selectedTimeSlot = time;
+            clearFieldError('appointmentTime');
+        }
+
+        // Validate step
+        function validateStep(step) {
+            let isValid = true;
+            
+            if (step === 1) {
+                const fields = ['fullName', 'email', 'phone', 'consultationType', 'subject'];
+                fields.forEach(field => {
+                    const input = document.getElementById(field);
+                    if (!input.value.trim()) {
+                        showFieldError(field, 'Este campo es obligatorio');
+                        isValid = false;
+                    } else {
+                        clearFieldError(field);
+                        
+                        // Email validation
+                        if (field === 'email' && !isValidEmail(input.value)) {
+                            showFieldError(field, 'Introduce un email válido');
+                            isValid = false;
+                        }
+                    }
+                });
+            }
+            
+            if (step === 2) {
+                const dateField = document.getElementById('appointmentDate');
+                if (!dateField.value) {
+                    showFieldError('appointmentDate', 'Selecciona una fecha');
+                    isValid = false;
+                } else {
+                    clearFieldError('appointmentDate');
+                }
+                
+                if (!selectedTimeSlot) {
+                    showFieldError('appointmentTime', 'Selecciona un horario');
+                    isValid = false;
+                } else {
+                    clearFieldError('appointmentTime');
+                }
+            }
+            
+            return isValid;
+        }
+
+        // Show field error
+        function showFieldError(fieldId, message) {
+            const errorElement = document.getElementById(`${fieldId}-error`);
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.classList.remove('hidden');
+            }
+            
+            const input = document.getElementById(fieldId);
+            if (input) {
+                input.classList.add('border-red-500', 'bg-red-50');
+            }
+        }
+
+        // Clear field error
+        function clearFieldError(fieldId) {
+            const errorElement = document.getElementById(`${fieldId}-error`);
+            if (errorElement) {
+                errorElement.classList.add('hidden');
+            }
+            
+            const input = document.getElementById(fieldId);
+            if (input) {
+                input.classList.remove('border-red-500', 'bg-red-50');
+            }
+        }
+
+        // Email validation
+        function isValidEmail(email) {
+            return /\S+@\S+\.\S+/.test(email);
+        }
+
+        // Update step indicators
+        function updateStepIndicators() {
+            for (let i = 1; i <= 3; i++) {
+                const indicator = document.getElementById(`step-${i}-indicator`);
+                
+                if (i < currentStep) {
+                    indicator.className = 'step-indicator step-complete w-10 h-10 rounded-full flex items-center justify-center font-semibold';
+                } else if (i === currentStep) {
+                    indicator.className = 'step-indicator step-active w-10 h-10 rounded-full flex items-center justify-center font-semibold';
+                } else {
+                    indicator.className = 'step-indicator step-inactive w-10 h-10 rounded-full flex items-center justify-center font-semibold';
+                }
+            }
+        }
+
+        // Show step
+        function showStep(step) {
+            // Hide all steps
+            for (let i = 1; i <= 3; i++) {
+                document.getElementById(`step-${i}`).classList.add('hidden');
+            }
+            
+            // Show current step
+            document.getElementById(`step-${step}`).classList.remove('hidden');
+            
+            // Update navigation
+            document.getElementById('current-step').textContent = step;
+            document.getElementById('prevBtn').disabled = step === 1;
+            
+            if (step === 3) {
+                document.getElementById('nextBtn').classList.add('hidden');
+                document.getElementById('confirmBtn').classList.remove('hidden');
+                populateConfirmation();
+            } else {
+                document.getElementById('nextBtn').classList.remove('hidden');
+                document.getElementById('confirmBtn').classList.add('hidden');
+            }
+            
+            updateStepIndicators();
+        }
+
+        // Next step
+        function nextStep() {
+            if (!validateStep(currentStep)) return;
+            
+            if (currentStep < 3) {
+                currentStep++;
+                showStep(currentStep);
+            }
+        }
+
+        // Previous step
+        function previousStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                showStep(currentStep);
+            }
+        }
+
+        // Populate confirmation step
+        function populateConfirmation() {
+            const getData = (id) => document.getElementById(id).value;
+            const getSelectText = (id) => {
+                const select = document.getElementById(id);
+                return select.options[select.selectedIndex].text;
+            };
+            
+            document.getElementById('confirm-name').textContent = getData('fullName');
+            document.getElementById('confirm-email').textContent = getData('email');
+            document.getElementById('confirm-phone').textContent = getData('phone');
+            document.getElementById('confirm-date').textContent = getSelectText('appointmentDate');
+            document.getElementById('confirm-time').textContent = selectedTimeSlot;
+            document.getElementById('confirm-location').textContent = getSelectText('location');
+            document.getElementById('confirm-type').textContent = getSelectText('consultationType');
+            document.getElementById('confirm-subject').textContent = getData('subject');
+            
+            const description = getData('description');
+            if (description) {
+                document.getElementById('confirm-description').textContent = description;
+                document.getElementById('confirm-description-container').classList.remove('hidden');
+            } else {
+                document.getElementById('confirm-description-container').classList.add('hidden');
+            }
+        }
+
+        // Submit form
+        async function submitForm() {
+            const confirmBtn = document.getElementById('confirmBtn');
+            const confirmBtnText = document.getElementById('confirmBtnText');
+            const confirmBtnLoader = document.getElementById('confirmBtnLoader');
+            
+            // Show loading state
+            confirmBtn.disabled = true;
+            confirmBtnText.classList.add('hidden');
+            confirmBtnLoader.classList.remove('hidden');
+            
+            // Collect form data
+            const formData = {
+                clientName: document.getElementById('fullName').value,
+                clientEmail: document.getElementById('email').value,
+                clientPhone: document.getElementById('phone').value,
+                title: document.getElementById('subject').value,
+                description: document.getElementById('description').value,
+                appointmentDate: document.getElementById('appointmentDate').value,
+                appointmentTime: selectedTimeSlot,
+                type: document.getElementById('consultationType').value,
+                location: document.getElementById('location').value,
+                duration: 60,
+                status: 'scheduled',
+                reminderSent: false,
+                confirmationSent: false,
+                source: 'web-booking',
+                createdBy: 'web-form'
+            };
+            
+            try {
+                // Simulate API call - In real implementation, this would send data to CRM
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Here you would integrate with your CRM API
+                console.log('Appointment data:', formData);
+                
+                // Show success message
+                document.getElementById('step-3').classList.add('hidden');
+                document.getElementById('form-navigation').classList.add('hidden');
+                document.getElementById('success-message').classList.remove('hidden');
+                
+            } catch (error) {
+                console.error('Error submitting appointment:', error);
+                alert('Hubo un error al procesar tu solicitud. Por favor, inténtalo de nuevo.');
+                
+                // Reset button state
+                confirmBtn.disabled = false;
+                confirmBtnText.classList.remove('hidden');
+                confirmBtnLoader.classList.add('hidden');
+            }
+        }
+
+        // Reset form
+        function resetForm() {
+            document.getElementById('appointmentForm').reset();
+            selectedTimeSlot = null;
+            currentStep = 1;
+            
+            // Hide success message and show step 1
+            document.getElementById('success-message').classList.add('hidden');
+            document.getElementById('form-navigation').classList.remove('hidden');
+            showStep(1);
+            
+            // Reset time slot container
+            document.getElementById('timeSlotContainer').style.display = 'none';
+            
+            // Clear any error states
+            document.querySelectorAll('.text-red-500').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.border-red-500').forEach(el => {
+                el.classList.remove('border-red-500', 'bg-red-50');
+            });
+        }
+
+        // Initialize the form
+        document.addEventListener('DOMContentLoaded', function() {
+            populateDates();
+            showStep(1);
+            
+            // Add event listener for date selection
+            document.getElementById('appointmentDate').addEventListener('change', function() {
+                showTimeSlots(this.value);
+                selectedTimeSlot = null; // Reset time selection when date changes
+            });
+            
+            // Add event listeners to clear errors on input
+            const inputs = ['fullName', 'email', 'phone', 'consultationType', 'subject'];
+            inputs.forEach(fieldId => {
+                const input = document.getElementById(fieldId);
+                if (input) {
+                    input.addEventListener('input', () => clearFieldError(fieldId));
+                }
+            });
+        });
+    </script>
+</body>
+</html>

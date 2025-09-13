@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { useClients } from './hooks/useClients';
+import { useSupabaseClients } from './hooks/useSupabaseClients';
 import { useTasks } from './hooks/useTasks';
 import { useServiceCategories } from './hooks/useServiceCategories';
 import { useDarkMode } from './hooks/useDarkMode';
+import { useAuth } from './hooks/useAuth';
 import { useSimpleAuth } from './hooks/useSimpleAuth';
 import { FilterBar } from './components/FilterBar';
 import { ClientCard } from './components/ClientCard';
-import { ClientForm } from './components/ClientForm';
-import { ClientDetails } from './components/ClientDetails';
+import { SimpleClientForm } from './components/SimpleClientForm';
+import { ClientDetails } from './components/ClientDetailsNew';
 import { WhatsAppMessenger } from './components/WhatsAppMessenger';
 import { CategoryManager } from './components/CategoryManager';
 import { TaskForm } from './components/TaskForm';
@@ -15,10 +16,11 @@ import { TaskList } from './components/TaskList';
 import { TaskReminders } from './components/TaskReminders';
 import { Login } from './components/Login';
 import { NavigationMenu } from './components/NavigationMenu';
-import { Dashboard } from './components/Dashboard';
+import { SimpleDashboard } from './components/SimpleDashboard';
 import { WhatsAppSetup } from './components/WhatsAppSetup';
+import AppointmentCalendar from './components/AppointmentCalendar';
 import { Client } from './types';
-import { Users, Calendar, TrendingUp, AlertCircle, HandCoins, CheckSquare, Plus, User, CheckCircle, MessageSquare } from 'lucide-react';
+import { Users, Calendar, TrendingUp, AlertCircle, HandCoins, CheckSquare, Plus, User, CheckCircle, MessageSquare, Search } from 'lucide-react';
 
 function App() {
   const {
@@ -35,7 +37,7 @@ function App() {
     updateClient,
     deleteClient,
     addWhatsAppMessage,
-  } = useClients();
+    } = useSupabaseClients();
 
   const {
     tasks,
@@ -61,17 +63,15 @@ function App() {
     updateCategory,
   } = useServiceCategories();
 
-  const { user, loading: authLoading, signOut } = useSimpleAuth();
+  // Detectar automáticamente si Supabase está configurado
+  const isSupabaseConfigured = import.meta.env.VITE_SUPABASE_URL && 
+                               import.meta.env.VITE_SUPABASE_URL !== 'https://tu-proyecto-real.supabase.co';
+  
+  const authHook = isSupabaseConfigured ? useAuth : useSimpleAuth;
+  const { user, loading: authLoading, signOut } = authHook();
   const [isDark, setIsDark] = useDarkMode();
 
-  // Debug logs detallados
-  console.log('🔍 Estado de auth:', { 
-    user, 
-    loading: authLoading, 
-    hasUser: !!user,
-    userString: JSON.stringify(user),
-    localStorage: localStorage.getItem('polska_crm_auth')
-  });
+  
 
   // Handler para análisis de IA de clientes con WhatsApp
   const handleAIAnalyze = async (client: Client) => {
@@ -91,7 +91,7 @@ function App() {
   const [editingTask, setEditingTask] = useState<any>(null);
   const [preselectedClientId, setPreselectedClientId] = useState<string | undefined>();
   const [showClientsList, setShowClientsList] = useState(false);
-  const [currentView, setCurrentView] = useState<'dashboard' | 'clients' | 'tasks'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'clients' | 'tasks' | 'calendar'>('dashboard');
   const [showLogin, setShowLogin] = useState(true);
   const [showWhatsAppSetup, setShowWhatsAppSetup] = useState(false);
 
@@ -115,31 +115,47 @@ function App() {
       <div>
         <Login onSwitchToSignup={() => setShowLogin(false)} />
         
-        {/* Debug buttons */}
+        {/* Acceso de emergencia */}
         <div className="fixed bottom-4 right-4 z-50 space-y-2">
           <button
             onClick={() => {
-              const testUser = {
+              const natiUser = {
                 id: '1',
-                email: 'admin@polska.com',
-                name: 'Superadministrador',
-                role: 'superadmin' as const
+                email: 'info@bizneswhiszpanii.com',
+                name: 'Nati',
+                role: 'admin' as const
               };
-              localStorage.setItem('polska_crm_auth', JSON.stringify(testUser));
+              localStorage.setItem('polska_crm_auth', JSON.stringify(natiUser));
               window.location.reload();
             }}
-            className="block w-full px-4 py-2 bg-red-600 text-white rounded-lg shadow-lg hover:bg-red-700 transition-colors text-center"
+            className="block w-full px-3 py-2 bg-blue-600 text-white rounded-lg shadow-lg hover:bg-blue-700 transition-colors text-center text-sm"
           >
-            🚨 BYPASS LOGIN
+            � Entrar como Nati
           </button>
           <button
             onClick={() => {
+              const kenyiUser = {
+                id: '2',
+                email: 'admin@pgkhiszpanii.com',
+                name: 'Kenyi',
+                role: 'superadmin' as const
+              };
+              localStorage.setItem('polska_crm_auth', JSON.stringify(kenyiUser));
+              window.location.reload();
+            }}
+            className="block w-full px-3 py-2 bg-purple-600 text-white rounded-lg shadow-lg hover:bg-purple-700 transition-colors text-center text-sm"
+          >
+            👨 Entrar como Kenyi
+          </button>
+          <button
+            onClick={() => {
+              // Solo eliminar datos de autenticación, preservar clientes y otros datos
               localStorage.removeItem('polska_crm_auth');
               window.location.reload();
             }}
-            className="block w-full px-4 py-2 bg-orange-600 text-white rounded-lg shadow-lg hover:bg-orange-700 transition-colors text-center"
+            className="block w-full px-3 py-2 bg-gray-600 text-white rounded-lg shadow-lg hover:bg-gray-700 transition-colors text-center text-sm"
           >
-            🧹 CLEAR SESSION
+            🧹 Limpiar Todo
           </button>
         </div>
       </div>
@@ -268,6 +284,10 @@ function App() {
     setShowTaskList(true);
   };
 
+  const handleViewCalendar = () => {
+    setCurrentView('calendar');
+  };
+
   // Dashboard stats
   const dashboardStats = {
     totalClients: allClients.length,
@@ -288,80 +308,99 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-
-      {/* Navigation Bar */}
+      {/* Simplified Navigation Bar */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-white rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 flex items-center justify-center p-2">
-              <img
-                src="/logo.png"
-                alt="Polska Grupa Konsultingowa"
-                className="w-full h-full object-contain"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.parentElement!.innerHTML = '<div class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center"><span class="text-white font-bold text-sm">PGK</span></div>';
-                }}
-              />
+          {/* Logo y título - CLICKEABLE para ir al dashboard */}
+          <div 
+            className="flex items-center space-x-4 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => setCurrentView('dashboard')}
+          >
+            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">PGK</span>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">Polska Grupa Konsultingowa</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Sistema de Gestión de Clientes</p>
+              <h1 className="text-lg font-bold text-gray-900 dark:text-white">CRM Polska</h1>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Gestión Inteligente</p>
             </div>
+          </div>
+
+          {/* Navegación Principal Simplificada */}
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setCurrentView('dashboard')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                currentView === 'dashboard'
+                  ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              � Dashboard
+            </button>
             
-            {/* Botones de configuración */}
-            <div className="flex space-x-2">
+            <button
+              onClick={() => handleViewClients()}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                currentView === 'clients'
+                  ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              👥 Clientes ({allClients.length})
+            </button>
+            
+            <button
+              onClick={() => handleViewTasks()}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                currentView === 'tasks'
+                  ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              ✅ Tareas ({allTasks.filter(t => t.status !== 'completed').length})
+            </button>
+
+            <button
+              onClick={() => handleViewCalendar()}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                currentView === 'calendar'
+                  ? 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              📅 Calendario
+            </button>
+
+            {/* Botón Agregar Cliente destacado */}
+            <button
+              onClick={handleAddClient}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center space-x-1"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Nuevo Cliente</span>
+            </button>
+
+            {/* Menú de usuario */}
+            <div className="relative ml-4">
               <button
-                onClick={() => {
-                  localStorage.clear();
-                  window.location.reload();
-                }}
-                className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
-                title="Cargar 5 clientes de ejemplo"
+                onClick={handleLogout}
+                className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                title="Cerrar sesión"
               >
-                🔄 Cargar Clientes Demo
-              </button>
-              
-              <button
-                onClick={() => setShowWhatsAppSetup(true)}
-                className="flex items-center space-x-1 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
-                title="Configurar WhatsApp"
-              >
-                <MessageSquare className="w-3 h-3" />
-                <span>📱 WhatsApp</span>
+                <User className="w-5 h-5" />
               </button>
             </div>
           </div>
-          <NavigationMenu
-            onAddClient={() => {
-              handleAddClient();
-              setCurrentView('dashboard');
-            }}
-            onManageCategories={() => {
-              setShowCategoryManager(true);
-              setCurrentView('dashboard');
-            }}
-            onOpenTasks={() => {
-              handleOpenTasks();
-              setCurrentView('dashboard');
-            }}
-            onToggleClientsList={() => {
-              handleViewClients();
-            }}
-            showClientsList={showClientsList}
-            onSignOut={handleLogout}
-          />
         </div>
       </div>
 
       {/* Main Content */}
       <div className="px-4 py-6">
-        {currentView === 'dashboard' && !showClientsList && !showTaskList ? (
-          <Dashboard
+        {currentView === 'dashboard' ? (
+          <SimpleDashboard
             stats={dashboardStats}
             clients={clients}
             tasks={tasks}
-            messages={whatsappMessages}
             onAddClient={() => {
               handleAddClient();
               setCurrentView('dashboard');
@@ -372,16 +411,181 @@ function App() {
             onViewClients={() => {
               handleViewClients();
             }}
-            onClientUpdate={updateClient}
-            onTaskCreate={addTask}
-            onNotesUpdate={(clientId: string, notes: string) => {
-              const clientToUpdate = clients.find(c => c.id === clientId);
-              if (clientToUpdate) {
-                updateClient(clientId, { notes });
-              }
-            }}
-
           />
+        ) : currentView === 'clients' ? (
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+                <Users className="w-7 h-7 mr-3 text-blue-600" />
+                Gestión de Clientes
+              </h1>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setIsDark(!isDark)}
+                  className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center space-x-2"
+                >
+                  {isDark ? (
+                    <>
+                      <span>☀️</span>
+                      <span>Claro</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>🌙</span>
+                      <span>Oscuro</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => setShowCategoryManager(true)}
+                  className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                >
+                  🏷️ Categorías
+                </button>
+                <button
+                  onClick={handleAddClient}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Nuevo Cliente</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Barra de búsqueda simple para clientes */}
+            <div className="mb-6">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre, email, empresa..."
+                  value={filters.search}
+                  onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+              
+              {/* Filtros básicos */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+                <select
+                  value={filters.status}
+                  onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                >
+                  <option value="">Todos los estados</option>
+                  <option value="pending">Pendiente</option>
+                  <option value="in-progress">En Proceso</option>
+                  <option value="paid">Pagada</option>
+                  <option value="completed">Completada</option>
+                  <option value="cancelled">Cancelada</option>
+                </select>
+                
+                <select
+                  value={filters.category}
+                  onChange={(e) => setFilters({ ...filters, category: e.target.value })}
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                >
+                  <option value="">Todas las categorías</option>
+                  {categories.map(cat => (
+                    <option key={cat.id} value={cat.name}>{cat.name}</option>
+                  ))}
+                </select>
+                
+                <select
+                  value={filters.priority}
+                  onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                >
+                  <option value="">Todas las prioridades</option>
+                  <option value="high">Alta</option>
+                  <option value="medium">Media</option>
+                  <option value="low">Baja</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Lista de Clientes */}
+            <div>
+              {/* Results info */}
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Mostrando {clients.length} de {allClients.length} clientes
+                </p>
+                <div className="flex items-center space-x-2 text-sm">
+                  <select
+                    value={`${sortField}-${sortDirection}`}
+                    onChange={(e) => {
+                      const [field, direction] = e.target.value.split('-');
+                      setSortField(field as any);
+                      setSortDirection(direction as any);
+                    }}
+                    className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                  >
+                    <option value="createdAt-desc">Más reciente</option>
+                    <option value="createdAt-asc">Más antiguo</option>
+                    <option value="name-asc">Nombre A-Z</option>
+                    <option value="name-desc">Nombre Z-A</option>
+                    <option value="paymentDue-asc">Pago próximo</option>
+                    <option value="priority-desc">Prioridad alta</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Client List */}
+              {clients.length === 0 ? (
+                <div className="text-center py-12">
+                  <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                    {allClients.length === 0 ? 'No hay clientes aún' : 'No se encontraron clientes'}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                    {allClients.length === 0 
+                      ? 'Comienza añadiendo tu primer cliente para gestionar tus consultas.'
+                      : 'Intenta ajustar los filtros para encontrar lo que buscas.'
+                    }
+                  </p>
+                  {allClients.length === 0 && (
+                    <button
+                      onClick={handleAddClient}
+                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Añadir Primer Cliente
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                  {clients.map((client) => (
+                    <ClientCard
+                      key={client.id}
+                      client={client}
+                      onClick={() => handleClientClick(client)}
+                      onEdit={() => handleEditClient(client)}
+                      onWhatsApp={() => handleWhatsAppOpen(client)}
+                      onAddTask={() => handleAddTask(client.id)}
+                      onAIAnalyze={() => handleAIAnalyze(client)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : currentView === 'tasks' ? (
+          <TaskList
+            tasks={tasks}
+            clients={allClients}
+            filters={taskFilters}
+            onFiltersChange={setTaskFilters}
+            onTaskComplete={completeTask}
+            onTaskEdit={handleEditTask}
+            onTaskDelete={deleteTask}
+            onAddComment={addTaskComment}
+            onAddTask={() => handleAddTask()}
+            isOpen={true}
+            onClose={() => setCurrentView('dashboard')}
+          />
+        ) : currentView === 'calendar' ? (
+          <AppointmentCalendar onAddAppointment={() => setShowTaskForm(true)} />
         ) : (
           <div>
             {/* Filter Bar - only show when not in dashboard */}
@@ -746,7 +950,7 @@ function App() {
 
 
       {/* Modals */}
-      <ClientForm
+      <SimpleClientForm
         client={editingClient || undefined}
         onSave={handleSaveClient}
         onCancel={() => {

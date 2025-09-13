@@ -1,25 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   X, 
-  Edit, 
   Trash2, 
   Phone, 
   Mail, 
-  MessageCircle, 
-  Calendar,
-  FileText,
-  ExternalLink,
   Building2,
-  Clock,
-  AlertCircle,
   Copy,
-  Send,
-  History,
+  CheckSquare,
+  ExternalLink,
+  Edit,
   Save,
   RotateCcw,
   Star,
+  Send,
+  Calendar,
+  Clock,
   HandCoins,
-  CheckSquare
+  FileText,
+  AlertCircle,
+  History
 } from 'lucide-react';
 import { Client, WhatsAppMessage } from '../types';
 
@@ -39,29 +38,15 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({
   client,
   isOpen,
   onClose,
-  onEdit,
   onDelete,
   onWhatsApp,
-  whatsappMessages,
   onUpdateClient,
   onOpenTasks,
 }) => {
-  const [isQuickEditing, setIsQuickEditing] = React.useState(false);
-  const [quickEditData, setQuickEditData] = React.useState({
-    status: client.status,
-    priority: client.priority,
-    notes: client.notes,
-    paidInCash: client.paidInCash,
-  });
-
-  React.useEffect(() => {
-    setQuickEditData({
-      status: client.status,
-      priority: client.priority,
-      notes: client.notes,
-      paidInCash: client.paidInCash,
-    });
-  }, [client]);
+  // Función para actualizar cualquier campo directamente
+  const updateField = (field: string, value: any) => {
+    onUpdateClient({ [field]: value });
+  };
 
   if (!isOpen) return null;
 
@@ -87,47 +72,6 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({
     }
   };
 
-  const getPriorityColor = (priority: Client['priority']) => {
-    switch (priority) {
-      case 'high': return 'text-red-600 dark:text-red-400';
-      case 'medium': return 'text-yellow-600 dark:text-yellow-400';
-      case 'low': return 'text-green-600 dark:text-green-400';
-      default: return 'text-gray-600 dark:text-gray-400';
-    }
-  };
-
-  const getPriorityText = (priority: Client['priority']) => {
-    switch (priority) {
-      case 'high': return 'Alta';
-      case 'medium': return 'Media';
-      case 'low': return 'Baja';
-      default: return priority;
-    }
-  };
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'No establecida';
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      // You could add a toast notification here
-    } catch (err) {
-      console.error('Error copying to clipboard:', err);
-    }
-  };
-
-  const handleWhatsApp = () => {
-    onWhatsApp();
-  };
-
   const handleEmail = () => {
     const primaryEmail = client.emails.find(email => email.isPrimary) || client.emails[0];
     if (primaryEmail) {
@@ -135,23 +79,12 @@ export const ClientDetails: React.FC<ClientDetailsProps> = ({
     }
   };
 
-  const handleDriveLink = (url: string) => {
-    window.open(url, '_blank');
-  };
-
-  const handleQuickSave = () => {
-    onUpdateClient(quickEditData);
-    setIsQuickEditing(false);
-  };
-
-  const handleQuickCancel = () => {
-    setQuickEditData({
-      status: client.status,
-      priority: client.priority,
-      notes: client.notes,
-      paidInCash: client.paidInCash,
-    });
-    setIsQuickEditing(false);
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (err) {
+      console.error('Error copying to clipboard:', err);
+    }
   };
 
   return (

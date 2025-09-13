@@ -26,8 +26,10 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToSignup }) => {
 
     if (error) {
       setError(error.message);
-      setLoading(false);
+    } else {
+      console.log('✅ Login exitoso!');
     }
+    setLoading(false);
   };
 
   return (
@@ -49,16 +51,34 @@ export const Login: React.FC<LoginProps> = ({ onSwitchToSignup }) => {
             <h3 className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-2">
               🔑 Credenciales de Acceso:
             </h3>
-            <div className="space-y-2 text-xs">
-              <div className="flex flex-col">
-                <span className="text-blue-700 dark:text-blue-300 font-medium">Nati (Admin):</span>
-                <span className="text-blue-600 dark:text-blue-400">📧 info@bizneswhiszpanii.com</span>
-                <span className="text-blue-600 dark:text-blue-400">🔒 Kocham647</span>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    console.log('🔥 LOGIN DIRECTO NATI');
+                    const result = await signIn('info@bizneswhiszpanii.com', 'Kocham647');
+                    console.log('🔥 Resultado:', result);
+                  }}
+                  className="px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded text-xs font-medium transition-colors"
+                >
+                  🚀 Login Directo Nati
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    console.log('🔥 LOGIN DIRECTO KENYI');
+                    const result = await signIn('admin@pgkhiszpanii.com', 'Kocham647');
+                    console.log('🔥 Resultado:', result);
+                  }}
+                  className="px-3 py-2 bg-purple-100 hover:bg-purple-200 text-purple-800 rounded text-xs font-medium transition-colors"
+                >
+                  � Login Directo Kenyi
+                </button>
               </div>
-              <div className="flex flex-col">
-                <span className="text-blue-700 dark:text-blue-300 font-medium">Kenyi (Superadmin):</span>
-                <span className="text-blue-600 dark:text-blue-400">📧 admin@pgkhiszpanii.com</span>
-                <span className="text-blue-600 dark:text-blue-400">🔒 Kocham647</span>
+              <div className="space-y-1 text-xs text-blue-600 dark:text-blue-400">
+                <div>📧 info@bizneswhiszpanii.com / admin@pgkhiszpanii.com</div>
+                <div>🔒 Kocham647</div>
               </div>
             </div>
           </div>

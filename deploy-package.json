@@ -1,0 +1,12 @@
+{
+  "name": "deploy-production",
+  "version": "1.0.0",
+  "scripts": {
+    "build:prod": "npm run build",
+    "preview": "vite preview",
+    "deploy:netlify": "netlify deploy --prod --dir=dist",
+    "deploy:vercel": "vercel --prod",
+    "check:env": "node scripts/check-env.js",
+    "setup:prod": "npm run check:env && npm run build:prod"
+  }
+}

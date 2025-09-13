@@ -7,19 +7,19 @@ interface User {
   role: 'superadmin' | 'admin' | 'user';
 }
 
-// Credenciales para los usuarios del CRM Polska
+// Credenciales para los usuarios del CRM Polska (desde variables de entorno)
 const HARDCODED_USERS = [
   {
     id: '1',
-    email: 'info@bizneswhiszpanii.com',
-    password: 'Kocham647',
+    email: import.meta.env.VITE_NATI_EMAIL || 'info@bizneswhiszpanii.com',
+    password: import.meta.env.VITE_NATI_PASSWORD || 'Kocham647',
     name: 'Nati',
     role: 'admin' as const
   },
   {
     id: '2',
-    email: 'admin@pgkhiszpanii.com',
-    password: 'Kocham647',
+    email: import.meta.env.VITE_KENYI_EMAIL || 'admin@pgkhiszpanii.com',
+    password: import.meta.env.VITE_KENYI_PASSWORD || 'Kocham647',
     name: 'Kenyi',
     role: 'superadmin' as const
   }
@@ -53,13 +53,19 @@ export const useSimpleAuth = () => {
 
   const signIn = async (email: string, password: string) => {
     console.log('🔐 Intentando login con:', { email, password });
+    console.log('📋 Usuarios disponibles:', HARDCODED_USERS.map(u => ({ email: u.email, password: u.password })));
     setLoading(true);
     
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     const foundUser = HARDCODED_USERS.find(
-      u => u.email === email && u.password === password
+      u => {
+        console.log(`🔍 Comparando: "${u.email}" === "${email}" && "${u.password}" === "${password}"`);
+        console.log(`   Email match: ${u.email === email}`);
+        console.log(`   Password match: ${u.password === password}`);
+        return u.email === email && u.password === password;
+      }
     );
 
     console.log('👤 Usuario encontrado:', foundUser);
